@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mplayer 내려받기</title>
+<link rel="icon" href="icon.png">
+<style>
+  :root { --bg:#121212; --card:#1e1e1e; --text:#fff; --sub:#aaa; --accent:#ff5e7e; --accent2:#7b2ff7; }
+  @media (prefers-color-scheme: light) { :root { --bg:#f7f7f9; --card:#fff; --text:#1b1b1f; --sub:#6b6b73; } }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+         font-family: -apple-system, "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+         display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+  main { width:100%; max-width:420px; text-align:center; }
+  img.icon { width:96px; height:96px; border-radius:22px; }
+  h1 { font-size:26px; margin:14px 0 4px; }
+  .ver { color:var(--sub); margin:0 0 22px; min-height:1.4em; }
+  a.btn { display:block; padding:16px; border-radius:14px; text-decoration:none; font-weight:700; font-size:17px;
+          color:#fff; background:linear-gradient(135deg,var(--accent),var(--accent2)); }
+  a.btn[aria-disabled="true"] { opacity:.5; pointer-events:none; }
+  .card { background:var(--card); border-radius:14px; padding:16px 18px; margin-top:18px; text-align:left;
+          font-size:14px; line-height:1.65; color:var(--sub); }
+  .card b { color:var(--text); }
+  ol { margin:6px 0 0; padding-left:20px; }
+  small { display:block; margin-top:14px; color:var(--sub); font-size:12px; word-break:break-all; }
+  small a { color:var(--sub); }
+</style>
+</head>
+<body>
+<main>
+  <img class="icon" src="icon.png" alt="">
+  <h1>Mplayer</h1>
+  <p class="ver" id="ver">최신 버전을 찾는 중…</p>
+  <a class="btn" id="btn" href="https://github.com/FOTIBlabs/mp3_player_app-releases/releases/latest/download/Mplayer.apk" aria-disabled="true">내려받기</a>
+
+  <div class="card">
+    <b>설치 방법 (처음 한 번만)</b>
+    <ol>
+      <li>내려받은 <b id="fname">Mplayer.apk</b> 파일을 엽니다.</li>
+      <li>"출처를 알 수 없는 앱" 안내가 나오면 <b>설정 → 이 출처 허용</b>을 켭니다.</li>
+      <li>Play 프로텍트 경고가 나오면 <b>무시하고 설치</b>를 누릅니다.</li>
+    </ol>
+    그다음부터는 앱을 켤 때 새 버전이 있으면 앱이 알아서 물어봐요.
+  </div>
+  <small>
+    자동으로 내려받아지지 않으면 위 버튼을 눌러 주세요.<br>
+    <a href="https://github.com/FOTIBlabs/mp3_player_app-releases/releases/latest">모든 배포 파일 보기</a>
+    <span id="sha"></span>
+  </small>
+</main>
+<script>
+(async () => {
+  const ver = document.getElementById('ver'), btn = document.getElementById('btn');
+  try {
+    const r = await fetch('https://api.github.com/repos/FOTIBlabs/mp3_player_app-releases/releases/latest',
+                          { headers: { Accept: 'application/vnd.github+json' } });
+    if (!r.ok) throw new Error(r.status);
+    const rel = await r.json();
+    const apks = (rel.assets || []).filter(a => a.name.toLowerCase().endsWith('.apk'));
+    // 버전이 붙은 이름(Mplayer1.9.14.apk)을 먼저, 없으면 아무 apk
+    const a = apks.find(x => /^Mplayer\d/.test(x.name)) || apks[0];
+    if (!a) throw new Error('no apk');
+    ver.textContent = '버전 ' + (rel.name || rel.tag_name) + ' · ' + (a.size / 1048576).toFixed(1) + 'MB';
+    btn.href = a.browser_download_url;
+    btn.textContent = a.name + ' 내려받기';
+    document.getElementById('fname').textContent = a.name;
+    const m = (rel.body || '').match(/SHA-256:\s*([0-9a-f]{64})/);
+    if (m) document.getElementById('sha').textContent = ' · SHA-256 ' + m[1];
+  } catch (e) {
+    ver.textContent = '최신 버전 정보를 못 불러왔어요. 아래 버튼으로 받아 주세요.';
+  }
+  btn.removeAttribute('aria-disabled');
+  // 페이지를 열면 바로 내려받기 시작
+  location.href = btn.href;
+})();
+</script>
+</body>
+</html>
